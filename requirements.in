@@ -1,0 +1,6 @@
+pip-tools
+
+setuptools
+click
+sqlalchemy
+doten 

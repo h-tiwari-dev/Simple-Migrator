@@ -1,0 +1,6 @@
+MIGRATIONS_FOLDER_NAME = "migrations"
+MIGRATIONS_CONFIG_FILE_NAME = ".config"
+
+CREATE_UP_START_MIGRATIONS = "%%%%%=====UP-MIGRATION-SQL=====%%%%%"
+END_MIGRATIONS = "%%%%%=====END=====%%%%%"
+CREATE_DOWN_START_MIGRATIONS = "%%%%%=====DOWN-MIGRATION-SQL=====%%%%%"

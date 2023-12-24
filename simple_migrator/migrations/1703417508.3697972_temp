@@ -1,0 +1,13 @@
+%%%%%=====UP-MIGRATION-SQL=====%%%%%
+
+CREATE TABLE ral (id INT, name VARCHAR(20), email VARCHAR(20));
+
+%%%%%=====END=====%%%%%
+
+%%%%%=====DOWN-MIGRATION-SQL=====%%%%%
+
+
+DROP TABLE ral;
+
+
+%%%%%=====END=====%%%%%

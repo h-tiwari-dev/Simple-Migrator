@@ -1,0 +1,15 @@
+%%%%%=====UP-MIGRATION-SQL=====%%%%%
+
+CREATE TABLE cal (id INT, name VARCHAR(20), email VARCHAR(20));
+
+
+
+%%%%%=====END=====%%%%%
+
+%%%%%=====DOWN-MIGRATION-SQL=====%%%%%
+
+DROP TABLE cal;
+
+
+
+%%%%%=====END=====%%%%%
