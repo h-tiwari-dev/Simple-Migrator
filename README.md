@@ -58,7 +58,7 @@ simple_migrator list pending
 ## Setup your project
 
 # TDOD:
-1. Make it so that the project does not reset when the setup is called twice.(There must be a better way).
-2. Add tests to ensure that it works.
-3. Add a decorator so that we can check if setup is correctly done and exists gracefully.
-4. Make sql errors more visible.
+* [ ] Make it so that the project does not reset when the setup is called twice.(There must be a better way).
+* [ ] Add tests to ensure that it works.
+* [ ] Add a decorator so that we can check if setup is correctly done and exists gracefully.
+* [ ] Make sql errors more visible.
