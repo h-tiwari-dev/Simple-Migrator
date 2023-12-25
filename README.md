@@ -55,7 +55,10 @@ simple_migrator list pending
 ```
 ---
 
-## Setup your project
+# Visit:
+1. [Github](https://github.com/h-tiwari-dev/Simple-Migrator)
+2. [PyPi](https://pypi.org/project/simple_migrator/)
+
 
 # TDOD:
 * [ ] Make it so that the project does not reset when the setup is called twice.(There must be a better way).

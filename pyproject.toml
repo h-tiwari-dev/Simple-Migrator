@@ -4,7 +4,7 @@ version = "0.1.7"
 description = "A simple migrator with no bs."
 authors = ["Harsh Tiwari"]
 license = "MIT"
-homepage = "https://github.com/h-tiwari-dev/Simple-Migrator"
+homepage = "https://h-tiwari-dev.github.io/Simple-Migrator"
 readme = "README.md"
 
 [tool.poetry.dependencies]
