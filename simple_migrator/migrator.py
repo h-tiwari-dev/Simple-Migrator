@@ -1,8 +1,8 @@
+from typing import List, Optional
 import click
 from dotenv import load_dotenv
-from sqlalchemy import desc
 
-from simple_migrator.utils.cli import handle_cli_commands, setup_cli
+from utils.cli import handle_cli_commands, setup_cli
 
 # Load the environment variables from the .env file
 load_dotenv()
@@ -38,23 +38,50 @@ def create(ctx, migration_name: str, description: str):
 
 
 @cli.command()
+@click.option(
+    "--files",
+    type=Optional[List[str]],
+    help="List of files you want to migrate up. This won't check if the migrations is already applied and will apply it nonetheless.",
+)
 @click.pass_context
-def up(ctx):
+def up(ctx, files: Optional[List[str]]):
     """Apply migrations."""
     setup_cli("up")
-    handle_cli_commands(ctx)
+    handle_cli_commands(ctx, files=files)
     # command = UpCommand(ctx.obj["path"], ctx.obj["database_config"])
     # command.execute()
 
 
 @cli.command()
+@click.option(
+    "--files",
+    type=Optional[List[str]],
+    help="List of files you want to rollback. This won't check the last runned migrations.",
+)
 @click.pass_context
-def down(ctx):
+def down(ctx, files):
     """Rollback migrations."""
     setup_cli("down")
-    handle_cli_commands(ctx)
+    handle_cli_commands(ctx, files=files)
     # command = DownCommand(ctx.obj["path"], ctx.obj["database_config"])
     # command.execute()
+
+
+@cli.command()
+@click.argument(
+    "mig_type",
+    type=click.Choice(
+        ["all", "applied", "failed", "last-applied", "pending"],
+        case_sensitive=False,
+    ),
+    default="last-applied"
+)
+@click.pass_context
+def list(ctx, mig_type: str):
+    """List Migrations."""
+    setup_cli("list")
+    print(type(mig_type), mig_type)
+    handle_cli_commands(ctx, mig_type=mig_type)
 
 
 if __name__ == "__main__":

@@ -40,14 +40,14 @@ class DataBase(DatabaseConfig):
         try:
             with Session.begin():
                 for query in queries:
-                    print(f"QUERY_TEXT: {query}")
-                    print(f"QUERY: {text(query)}")
+                    # print(f"QUERY_TEXT: {query}")
+                    # print(f"QUERY: {text(query)}")
                     Session.execute(text(query))
             result = True
-        except Exception:
+        except Exception as e:
             # Rollback the transaction if there was an error
             Session.rollback()
-            print(f"Error occured {Exception}")
+            print(f"Error occured {e}")
             result = False
         finally:
             Session.close()

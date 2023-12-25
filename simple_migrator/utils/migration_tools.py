@@ -2,20 +2,24 @@ from datetime import datetime
 import re
 from typing import List, Optional, Tuple
 
-from sqlalchemy import func
-from simple_migrator.database.config import DatabaseConfig
+from simple_migrator.database.config import (
+    DatabaseConfig
+    )
+from simple_migrator.database.database_class import (
+    DataBase
+)
 from simple_migrator.database.tables.migrations_table import (
     MigrationStatus,
     MigrationsTable,
 )
-from simple_migrator.utils.constants import (
+from pathlib import Path
+from .constants import (
     CREATE_DOWN_START_MIGRATIONS,
     CREATE_UP_START_MIGRATIONS,
     END_MIGRATIONS,
     MIGRATIONS_CONFIG_FILE_NAME,
     MIGRATIONS_FOLDER_NAME,
 )
-from ..database.database import DataBase
 import os
 import time
 import shutil
@@ -40,7 +44,7 @@ class MigrationTool:
         if not os.path.exists(file_path):
             # Read template content from the file
             with open(
-                os.path.join(os.getcwd(), "templates/config.txt"), "r"
+                os.path.join(Path(__file__).parent.parent, "templates/config.txt"), "r"
             ) as template_file:
                 template_content = template_file.read()
 
@@ -97,18 +101,25 @@ class MigrationTool:
             session.commit()
             session.close()
 
-    def get_migrations(self, migration_type: str) -> List[str]:
+    def validate_migrations_from_file_name(self, file_names: List[str]):
+        non_existent_files = [file for file in file_names if not os.path.exists(file)]
+        if len(non_existent_files) != 0:
+            raise Exception(
+                f"Following migrations files does not exists: \n{non_existent_files}\n Are you sure the names are correct?"
+            )
         with self.database.Session() as session:
-            if migration_type == "up":
-                query_result = (
-                    session.query(MigrationsTable.name)
-                    .filter_by(status=MigrationStatus.PENDING)
-                    .all()
+            query_result = (
+                session.query(MigrationsTable.name)
+                .filter_by(name=MigrationsTable.name.not_in(file_names))
+                .all()
+            )
+            database_file_names = [value for (value,) in query_result]
+            if len(database_file_names) != 0:
+                print(
+                    f"Could not find the following migrations in the database {database_file_names}. CREATING THEM."
                 )
-                return [value for (value,) in query_result]
-            elif migration_type == "down":
-                return []
-        return []
+                for database_file_name in database_file_names:
+                    self.save_migration(database_file_name, "")
 
     def group_migrations(self, migrations_name: List[str]):
         new_group_val = datetime.now()
@@ -147,6 +158,59 @@ class MigrationTool:
 
             return []
 
+    def get_migrations(self, mig_type: str) -> List[MigrationsTable]:
+        with self.database.Session() as session:
+            # Use group_by, func.max, and order_by to get a list of MyModel objects
+            # grouped by datetime and sorted within each group
+            if mig_type == "last-applied":
+                max_group_value = (
+                    session.query(MigrationsTable)
+                    .filter_by(status=MigrationStatus.APPLIED)
+                    .order_by(MigrationsTable.date_time_group.desc())
+                    .first()
+                )
+                if max_group_value:
+                    grouped_and_sorted_objects = (
+                        session.query(MigrationsTable)
+                        .filter_by(date_time_group=max_group_value.date_time_group)
+                        .all()
+                    )
+                    return grouped_and_sorted_objects
+                return []
+            if mig_type == "all":
+                result = (
+                    session.query(MigrationsTable)
+                    .order_by(MigrationsTable.date_time_group.desc())
+                    .all()
+                )
+                return result if result else []
+            if mig_type == "applied":
+                result = (
+                    session.query(MigrationsTable)
+                    .filter_by(status=MigrationStatus.APPLIED)
+                    .order_by(MigrationsTable.date_time_group.desc())
+                    .all()
+                )
+                return result if result else []
+            if mig_type == "pending":
+                result = (
+                    session.query(MigrationsTable).filter_by(
+                        status=MigrationStatus.PENDING
+                    )
+                    .all()
+                )
+                return result if result else []
+            if mig_type == "failed":
+                result = (
+                    session.query(MigrationsTable)
+                    .filter_by(status=MigrationStatus.FAILED)
+                    .order_by(MigrationsTable.date_time_group.desc())
+                    .all()
+                )
+                return result if result else []
+
+            return []
+
     def extract_migration(self, file_name, mig_type="up") -> List[str]:
         file_path = os.path.join(MIGRATIONS_FOLDER_NAME, file_name)
         up_migration_sql: List[str] = []
@@ -165,10 +229,12 @@ class MigrationTool:
             )
             if up_migration_sql_re:
                 up_migration_sql_str = up_migration_sql_re.group(1)
-                up_migration_sql = up_migration_sql_str.split("\n")
+                up_migration_sql = up_migration_sql_str.split(";")
 
         return list(
-            map(lambda x: x.strip(), filter(lambda x: x != "", up_migration_sql))
+            filter(
+                lambda x: len(x) != 0, 
+            map(lambda x: x.replace("\n", " ").strip(), filter(lambda x: x != "", up_migration_sql)))
         )
 
     def print_migration_info(self, action):
