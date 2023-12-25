@@ -40,13 +40,15 @@ def create(ctx, migration_name: str, description: str):
 @cli.command()
 @click.option(
     "--files",
-    type=Optional[List[str]],
+    # type=List[str],
     help="List of files you want to migrate up. This won't check if the migrations is already applied and will apply it nonetheless.",
 )
 @click.pass_context
 def up(ctx, files: Optional[List[str]]):
     """Apply migrations."""
     setup_cli("up")
+    if files and type(files) != "list":
+        files = [files]
     handle_cli_commands(ctx, files=files)
     # command = UpCommand(ctx.obj["path"], ctx.obj["database_config"])
     # command.execute()
@@ -55,13 +57,15 @@ def up(ctx, files: Optional[List[str]]):
 @cli.command()
 @click.option(
     "--files",
-    type=Optional[List[str]],
+    type=List[str],
     help="List of files you want to rollback. This won't check the last runned migrations.",
 )
 @click.pass_context
 def down(ctx, files):
     """Rollback migrations."""
     setup_cli("down")
+    if files and type(files) != "list":
+        files = [files]
     handle_cli_commands(ctx, files=files)
     # command = DownCommand(ctx.obj["path"], ctx.obj["database_config"])
     # command.execute()
@@ -80,7 +84,6 @@ def down(ctx, files):
 def list(ctx, mig_type: str):
     """List Migrations."""
     setup_cli("list")
-    print(type(mig_type), mig_type)
     handle_cli_commands(ctx, mig_type=mig_type)
 
 

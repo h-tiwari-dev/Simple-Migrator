@@ -92,7 +92,6 @@ class MigrationTool:
             session.close()
 
     def update_migration(self, file_name: str, migration_status: MigrationStatus):
-        print(f"Updating Migration {file_name} {migration_status}")
         with self.database.Session() as session:
             migration = session.query(MigrationsTable).filter_by(name=file_name).first()
             if migration:
@@ -102,7 +101,7 @@ class MigrationTool:
             session.close()
 
     def validate_migrations_from_file_name(self, file_names: List[str]):
-        non_existent_files = [file for file in file_names if not os.path.exists(file)]
+        non_existent_files = [file for file in file_names if not os.path.exists(os.path.join(MIGRATIONS_FOLDER_NAME,file))]
         if len(non_existent_files) != 0:
             raise Exception(
                 f"Following migrations files does not exists: \n{non_existent_files}\n Are you sure the names are correct?"
@@ -123,9 +122,6 @@ class MigrationTool:
 
     def group_migrations(self, migrations_name: List[str]):
         new_group_val = datetime.now()
-        print(
-            f"Adding the following group value {new_group_val} to these {migrations_name}"
-        )
         with self.database.Session() as session:
             migrations = (
                 session.query(MigrationsTable)

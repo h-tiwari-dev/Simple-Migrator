@@ -1,6 +1,6 @@
 %%%%%=====UP-MIGRATION-SQL=====%%%%%
 
-CREATE TABLE user (
+CREATE TABLE cal (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE user (
 
 %%%%%=====DOWN-MIGRATION-SQL=====%%%%%
 
-DROP TABLE user;
+DROP TABLE cal;
 
 
 %%%%%=====END=====%%%%%

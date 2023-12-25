@@ -2,6 +2,7 @@ from typing import List, Optional
 import click
 import os
 
+from colored import fg, bg, attr
 from sqlalchemy.sql.sqltypes import String
 from simple_migrator.database.config import DatabaseConfig
 from simple_migrator.database.tables.migrations_table import MigrationStatus
@@ -11,26 +12,22 @@ from utils.migration_tools import MigrationTool
 
 
 def setup_migrator(ctx, url):
-    print(ctx)
     migration_tool = MigrationTool(DatabaseConfig.create_from_values(url))
-    migration_tool.print_migration_info("setup")
     migration_tool.setup()
     migration_tool.database.setup_table()
 
 
 def create_migration(ctx, migration_name: str, description: Optional[str]):
     migration_tool = MigrationTool(DatabaseConfig.create_from_config_file())
-    migration_tool.print_migration_info("create")
     file_name, file_path = migration_tool.create_migration_file(
         migration_name=migration_name
     )
     migration_tool.save_migration(file_name, description)
-    print(file_name, file_path)
+    print(f"Migration {fg("green")}{file_path}{attr("reset")} created at {fg("green")}{file_path}{attr("reset")}")
 
 
 def apply_migrations(ctx, files: Optional[List[str]]):
     migration_tool = MigrationTool(DatabaseConfig.create_from_config_file())
-    migration_tool.print_migration_info("up")
     migration_files: List[str] = []
 
     if files and len(files) != 0:
@@ -39,30 +36,28 @@ def apply_migrations(ctx, files: Optional[List[str]]):
     else:
         migration_files = [mig.name for mig in migration_tool.get_migrations("pending")]
 
-    print(f"Going to run the following migrations:\n {','.join(migration_files)}")
+    print(f"Going to run the following migrations:\n {fg("green")}{','.join(migration_files)}{attr("reset")}")
     up_migrations = list(
         filter(
             lambda x: len(x[1]) != 0,
             [(mig, migration_tool.extract_migration(mig)) for mig in migration_files],
         )
     )
-    # print("UP_MIGRATIONS:-", up_migrations)
-    # return
     valid_migrations_name = list(map(lambda x: x[0], up_migrations))
     migration_tool.group_migrations(valid_migrations_name)
 
     for migration in up_migrations:
         result = migration_tool.database.execute_transactions(migration[1])
         if result:
-            print(f"Migraiton {migration[0]} completed")
+            print(f"{fg("blue")}Migraiton {migration[0]}: {attr("reset")}{fg("green")}COMPLETED{attr("reset")}")
             migration_tool.update_migration(migration[0], MigrationStatus.APPLIED)
         else:
-            print(f"Migraiton {migration[0]} failed")
+            print(f"Migraiton {migration[0]}: {fg("red")}FAILED{attr("reset")}")
             migration_tool.update_migration(migration[0], MigrationStatus.FAILED)
 
     if len(up_migrations) != len(migration_files):
         print(
-            f"These migrations could not be runned. {list(filter(lambda x: x in migration_files, valid_migrations_name))}"
+            f"These migrations could not be runned. \n{fg("red")}{"\n".join(list(filter(lambda x: x in migration_files, valid_migrations_name)))}{attr("reset")}"
         )
     else:
         print("All Up migration runned successfully.")
@@ -70,7 +65,6 @@ def apply_migrations(ctx, files: Optional[List[str]]):
 
 def rollback_migrations(ctx, files: Optional[List[str]]):
     migration_tool = MigrationTool(DatabaseConfig.create_from_config_file())
-    migration_tool.print_migration_info("down")
     last_runned_migrations = []
 
     if files and len(files) != 0:
@@ -111,9 +105,7 @@ def rollback_migrations(ctx, files: Optional[List[str]]):
 
 def list_migrations(ctx, mig_type: str):
     migration_tool = MigrationTool(DatabaseConfig.create_from_config_file())
-    migration_tool.print_migration_info("down")
     migrations = migration_tool.get_migrations(mig_type)
-    print(migrations)
 
     table = PrettyTable()
     # Define table headers
