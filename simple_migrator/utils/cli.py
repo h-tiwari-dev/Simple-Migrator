@@ -23,7 +23,7 @@ def create_migration(ctx, migration_name: str, description: Optional[str]):
         migration_name=migration_name
     )
     migration_tool.save_migration(file_name, description)
-    print(f"Migration {fg("green")}{file_path}{attr("reset")} created at {fg("green")}{file_path}{attr("reset")}")
+    print(f"Migration {fg('green')}{file_path}{attr('reset')} created at {fg('green')}{file_path}{attr('reset')}")
 
 
 def apply_migrations(ctx, files: Optional[List[str]]):
@@ -36,7 +36,7 @@ def apply_migrations(ctx, files: Optional[List[str]]):
     else:
         migration_files = [mig.name for mig in migration_tool.get_migrations("pending")]
 
-    print(f"Going to run the following migrations:\n {fg("green")}{','.join(migration_files)}{attr("reset")}")
+    print(f"Going to run the following migrations:\n {fg('green')}{','.join(migration_files)}{attr('reset   ')}")
     up_migrations = list(
         filter(
             lambda x: len(x[1]) != 0,
@@ -49,15 +49,20 @@ def apply_migrations(ctx, files: Optional[List[str]]):
     for migration in up_migrations:
         result = migration_tool.database.execute_transactions(migration[1])
         if result:
-            print(f"{fg("blue")}Migraiton {migration[0]}: {attr("reset")}{fg("green")}COMPLETED{attr("reset")}")
+            print(f"{fg('blue')}Migraiton {migration[0]}: {attr('reset')}{fg('green')}COMPLETED{attr('reset')}")
             migration_tool.update_migration(migration[0], MigrationStatus.APPLIED)
         else:
-            print(f"Migraiton {migration[0]}: {fg("red")}FAILED{attr("reset")}")
+            print(f"Migraiton {migration[0]}: {fg('red')}FAILED{attr('reset')}")
             migration_tool.update_migration(migration[0], MigrationStatus.FAILED)
 
     if len(up_migrations) != len(migration_files):
         print(
-            f"These migrations could not be runned. \n{fg("red")}{"\n".join(list(filter(lambda x: x in migration_files, valid_migrations_name)))}{attr("reset")}"
+            "These migrations could not be runned.", fg('red'),
+            '\n'.join(list(filter(lambda x: x in migration_files, valid_migrations_name))),
+            attr('reset')
+        )
+
+        print(
         )
     else:
         print("All Up migration runned successfully.")
