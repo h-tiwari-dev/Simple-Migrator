@@ -8,7 +8,7 @@ from simple_migrator.database.config import DatabaseConfig
 from simple_migrator.database.tables.migrations_table import MigrationStatus
 from prettytable import PrettyTable
 
-from utils.migration_tools import MigrationTool
+from simple_migrator.utils.migration_tools import MigrationTool
 
 
 def setup_migrator(ctx, url):

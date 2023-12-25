@@ -2,7 +2,7 @@ from typing import List, Optional
 import click
 from dotenv import load_dotenv
 
-from utils.cli import handle_cli_commands, setup_cli
+from simple_migrator.utils.cli import handle_cli_commands, setup_cli
 
 # Load the environment variables from the .env file
 load_dotenv()

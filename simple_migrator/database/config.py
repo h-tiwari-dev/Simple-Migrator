@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from simple_migrator.database.database_type import DatabaseType
 
-from utils.constants import MIGRATIONS_CONFIG_FILE_NAME, MIGRATIONS_FOLDER_NAME
+from simple_migrator.utils.constants import MIGRATIONS_CONFIG_FILE_NAME, MIGRATIONS_FOLDER_NAME
 
 
 @dataclass(frozen=True)
