@@ -3,15 +3,15 @@
 A simple tool written in python to run simple migrations.
 # Basic Usage
 
-## 1. Setup
+### 1. Setup
 ```bash
 simple_migrator setup {DATABASE_URL}
 ```
-## 2. Create 
+### 2. Create 
 ```bash
 simple_migrator create {MIGRATION_NAME} 
 ```
-## 3. Apply 
+### 3. Apply 
 i. There are two ways to apply the migration. One way is to apply all the latest pending migrations.
 ```bash
 simple_migrator up  
@@ -22,7 +22,7 @@ ii. Another way to do this is to give the files name to the up command.
 simple_migrator up --files 1703509439.048595_temp
 ```
 
-## 3. Rollback 
+### 3. Rollback 
 i. Similar to "up" migration there are two ways to do this 
 ```bash
 simple_migrator down 
@@ -32,7 +32,7 @@ ii. Another way to do this is to give the files name to the up command.
 ```bash
 simple_migrator down --files 1703509439.048595_temp
 ```
-## 4. List
+### 4. List
 i. List All
 This will list all the migrations present.
 ```bash

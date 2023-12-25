@@ -1,2 +1,3 @@
 simple_migrator/tests
 dist/*
+migrations
