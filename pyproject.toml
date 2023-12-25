@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "simple_migrator"
+version = "0.1.0"
+description = "A simple migrator with no bs."
+authors = ["Harsh Tiwari"]
+license = "MIT"
+homepage = "https://github.com/realpython/reader"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python ="^3.12"
+build = "1.0.3"
+click="8.1.7"
+packaging="23.2"
+pip-tools="7.3.0"
+pyproject-hooks="1.0.0"
+sqlalchemy="2.0.23"
+typing-extensions="4.9.0"
+wheel="0.42.0"
+python-dotenv = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+simple_migrator = "simple_migrator.migrator:cli"
+
