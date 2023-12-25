@@ -4,7 +4,6 @@ import click
 import os
 from simple_migrator.database.config import DatabaseConfig
 from simple_migrator.database.tables.migrations_table import MigrationStatus
-from simple_migrator.migrator import down
 from simple_migrator.utils.migration_tools import MigrationTool
 
 
