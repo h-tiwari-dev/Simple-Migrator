@@ -13,10 +13,10 @@ jobs:
       mysql:
         image: mysql:latest
         env:
-          MYSQL_DATABASE: testdb
-          MYSQL_ROOT_PASSWORD: alph123 
+         MYSQL_DATABASE: testdb
+         MYSQL_ROOT_PASSWORD: alph123 
         ports:
-          - "3306:3306"
+         - "3306:3306"
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
@@ -41,5 +41,5 @@ jobs:
         # These environment variables will take precedence over the ones in the Django settings file
         env:
           # Set the DJANGO_SECRET_KEY in the Github repo settings: Go to Secrets and variables > Actions > New repository secret 
-          DATABASE_URL: "mysql://root:Julia%401984@localhost:3306/test_db"
+          DATABASE_URL: "mysql://root:alpha123@localhost:3306/test_db"
         run: cd test && poetry run python -m unittest 
