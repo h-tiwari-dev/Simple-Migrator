@@ -18,9 +18,6 @@ jobs:
         ports:
           - "3306:3306"
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-        # This will create a network link between the service container and the job container
-        # It allows the job container to communicate with the MySQL service container
-        container_name: mysql-container
 
     steps:
       - uses: actions/checkout@v3
@@ -31,7 +28,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v3
         with:
-          python-version: 3.10
+          python-version: 3.110
 
       - name: Install Poetry
         run: |
