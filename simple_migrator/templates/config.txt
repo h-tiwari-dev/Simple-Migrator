@@ -1,1 +1,1 @@
-DATABASE_URL:{database_url}
+DATABASE_ENV_NAME:{db_env_name}

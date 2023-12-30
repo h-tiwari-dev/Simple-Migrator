@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 
 from simple_migrator.database.config import (
     DatabaseConfig
-    )
+)
 from simple_migrator.database.database_class import (
     DataBase
 )
@@ -12,7 +12,9 @@ from simple_migrator.database.tables.migrations_table import (
     MigrationStatus,
     MigrationsTable,
 )
-from pathlib import Path
+
+from simple_migrator.utils.decorators import check_unsynced_migrations
+
 from .constants import (
     CREATE_DOWN_START_MIGRATIONS,
     CREATE_UP_START_MIGRATIONS,
@@ -22,7 +24,6 @@ from .constants import (
 )
 import os
 import time
-import shutil
 
 
 class MigrationTool:
@@ -30,43 +31,64 @@ class MigrationTool:
         self.database_config = database_config
         self.database = DataBase(url=database_config.url)
 
-    def setup(self):
-        # Check if the folder exists
+    @staticmethod
+    def setup(db_env_name: Optional[str]):
+        # Check if the folder existsmysql://root:Julia%401984@localhost:3306/test_db
         if not os.path.exists(MIGRATIONS_FOLDER_NAME):
             # If not, create the folder
             os.makedirs(MIGRATIONS_FOLDER_NAME)
             print(f"Migration folder '{MIGRATIONS_FOLDER_NAME}' created.")
 
-        file_path = os.path.join(MIGRATIONS_FOLDER_NAME, MIGRATIONS_CONFIG_FILE_NAME)
+        file_path = os.path.join(
+            MIGRATIONS_FOLDER_NAME, MIGRATIONS_CONFIG_FILE_NAME)
         print("File_path", file_path)
+        database_config = DatabaseConfig.setup_db_config(
+            db_env_name=db_env_name)
+        return MigrationTool(database_config)
 
-        # Check if the file exists
-        if not os.path.exists(file_path):
-            # Read template content from the file
-            with open(
-                os.path.join(Path(__file__).parent.parent, "templates/config.txt"), "r"
-            ) as template_file:
-                template_content = template_file.read()
+    def get_unsynced(self):
+        db_migrations = self.get_migrations("all")
+        files = [f for f in os.listdir(MIGRATIONS_FOLDER_NAME)
+                 if f != ".config" and os.path.isfile(os.path.join(MIGRATIONS_FOLDER_NAME, f))]
 
-            # Replace {variable1} and {variable2} with actual values
-            template_content = template_content.format(
-                database_url=self.database_config.url,
-            )
+        unsynced_files = []
+        unsynced_db_entries = {}
+        is_unscynced = False
+        # Add new migrations to the database
+        for file in files:
+            migration_name = os.path.splitext(file)[0]
+            if migration_name not in [m.name for m in db_migrations]:
+                is_unscynced = True
+                unsynced_files.append(migration_name)
 
-            with open(file_path, "w") as file:
-                file.write(template_content)
+        # Remove database migrations that don't have corresponding files
+        for migration in db_migrations:
+            if migration.name not in [os.path.splitext(f)[0] for f in files]:
+                is_unscynced = True
+                unsynced_db_entries[str(migration.name)] = migration
 
-            print(f"Config File '{file_path}' created.")
-        else:
-            # Recreate the folder and file if they already exist
-            print("File already exits. Reinitializing everything!!")
-            shutil.rmtree(MIGRATIONS_FOLDER_NAME)
-            self.setup()
+        return (is_unscynced, unsynced_files, unsynced_db_entries)
+
+    def sync_migrations(self):
+        is_unscynced, unsynced_files, unsynced_db_entries = self.get_unsynced()
+        if not is_unscynced:
+            print("Database is scynced")
+
+        # Add new migrations to the database
+        for file in unsynced_files:
+            self.save_migration(file, None)
+
+        # Remove database migrations that don't have corresponding files
+        for key, _ in unsynced_db_entries.items():
+            self.remove_migration(str(key))
+
+        print("Scyncing completed")
 
     @staticmethod
-    def create_migration_name(file_name: str):
-        return f"{time.time()}_{file_name}"
+    def create_migration_name(file_name: str) -> str:
+        return f"{time.time_ns()}_{file_name}.sql"
 
+    @check_unsynced_migrations
     def create_migration_file(self, migration_name: str) -> Tuple[str, str]:
         file_name = MigrationTool.create_migration_name(migration_name)
         file_path = os.path.join(MIGRATIONS_FOLDER_NAME, file_name)
@@ -84,16 +106,38 @@ class MigrationTool:
             )
         return file_name, file_path
 
-    def save_migration(self, file_name: str, description: Optional[str]):
+    def remove_migration(self, migration_name: str):
         with self.database.Session() as session:
-            new_row = MigrationsTable(name=file_name, description=description)
+            migration = session.query(MigrationsTable).filter_by(
+                name=migration_name).first()
+            if migration:
+                session.delete(migration)
+                session.commit()
+
+    def save_migration(self, file_name: str, description: Optional[str], migration_status=MigrationStatus.PENDING):
+        with self.database.Session() as session:
+            new_row = MigrationsTable(
+                name=file_name, description=description, status=migration_status)
             session.add(new_row)
             session.commit()
             session.close()
 
+    def update_migrations(self, file_names: List[str], migration_status: MigrationStatus):
+        with self.database.Session() as session:
+            try:
+                migrations = session.query(MigrationsTable).filter(MigrationsTable.name.in_(file_names)).all()
+                for migration in migrations:
+                    migration.status = migration_status
+                    migration.applied_at = datetime.now()
+                session.commit()
+                session.close()
+            except Exception:
+                print("ERR")
+
     def update_migration(self, file_name: str, migration_status: MigrationStatus):
         with self.database.Session() as session:
-            migration = session.query(MigrationsTable).filter_by(name=file_name).first()
+            migration = session.query(MigrationsTable).filter_by(
+                name=file_name).first()
             if migration:
                 migration.status = migration_status
                 migration.applied_at = datetime.now()
@@ -101,7 +145,8 @@ class MigrationTool:
             session.close()
 
     def validate_migrations_from_file_name(self, file_names: List[str]):
-        non_existent_files = [file for file in file_names if not os.path.exists(os.path.join(MIGRATIONS_FOLDER_NAME,file))]
+        non_existent_files = [file for file in file_names if not os.path.exists(
+            os.path.join(MIGRATIONS_FOLDER_NAME, file))]
         if len(non_existent_files) != 0:
             raise Exception(
                 f"Following migrations files does not exists: \n{non_existent_files}\n Are you sure the names are correct?"
@@ -229,8 +274,8 @@ class MigrationTool:
 
         return list(
             filter(
-                lambda x: len(x) != 0, 
-            map(lambda x: x.replace("\n", " ").strip(), filter(lambda x: x != "", up_migration_sql)))
+                lambda x: len(x) != 0,
+                map(lambda x: x.replace("\n", " ").strip(), filter(lambda x: x != "", up_migration_sql)))
         )
 
     def print_migration_info(self, action):

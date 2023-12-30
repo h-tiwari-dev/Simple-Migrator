@@ -2,8 +2,7 @@ from typing import List, Optional
 import click
 import os
 
-from colored import fg, bg, attr
-from sqlalchemy.sql.sqltypes import String
+from colored import fg, attr
 from simple_migrator.database.config import DatabaseConfig
 from simple_migrator.database.tables.migrations_table import MigrationStatus
 from prettytable import PrettyTable
@@ -11,9 +10,8 @@ from prettytable import PrettyTable
 from simple_migrator.utils.migration_tools import MigrationTool
 
 
-def setup_migrator(ctx, url):
-    migration_tool = MigrationTool(DatabaseConfig.create_from_values(url))
-    migration_tool.setup()
+def setup_migrator(ctx, database_env_name):
+    migration_tool = MigrationTool.setup(database_env_name)
     migration_tool.database.setup_table()
 
 
@@ -25,6 +23,26 @@ def create_migration(ctx, migration_name: str, description: Optional[str]):
     migration_tool.save_migration(file_name, description)
     print(f"Migration {fg('green')}{file_path}{attr('reset')} created at {fg('green')}{file_path}{attr('reset')}")
 
+def scync_miration(ctx):
+    migration_tool = MigrationTool(DatabaseConfig.create_from_config_file())
+    migration_tool.sync_migrations()
+
+def update_migration(ctx, files: List[str], status: MigrationStatus):
+    migration_tool = MigrationTool(DatabaseConfig.create_from_config_file())
+    files = list(files)
+
+    if files and len(files) != 0:
+        migration_tool.validate_migrations_from_file_name(files)
+        migration_names = files
+    else:
+        raise Exception("Files must be provieded to update migrations")
+    print(
+        f"""Going to update the following migrations:{[mig for mig in migration_names]} to status {status}"""
+    )
+    try:
+        migration_tool.update_migrations(migration_names, status)
+    except Exception:
+        print(f"Exceptions occured while updating migrtaions")
 
 def apply_migrations(ctx, files: Optional[List[str]]):
     migration_tool = MigrationTool(DatabaseConfig.create_from_config_file())
@@ -34,7 +52,7 @@ def apply_migrations(ctx, files: Optional[List[str]]):
         migration_tool.validate_migrations_from_file_name(files)
         migration_files = files
     else:
-        migration_files = [mig.name for mig in migration_tool.get_migrations("pending")]
+        migration_files = [str(mig.name) for mig in migration_tool.get_migrations("pending")]
 
     print(f"Going to run the following migrations:\n {fg('green')}{','.join(migration_files)}{attr('reset   ')}")
     up_migrations = list(
@@ -117,7 +135,8 @@ def list_migrations(ctx, mig_type: str):
     table.field_names = ["Name", "Status", "Applied At"]
     # Add data to the table
     for mig in migrations:
-        table.add_row([mig.name, mig.status, mig.applied_at])
+        print(str(mig.name))
+        table.add_row([str(mig.name), str(mig.status), str(mig.applied_at)])
     print(table)
 
 
@@ -132,8 +151,12 @@ def handle_cli_commands(ctx, **kwargs):
         rollback_migrations(ctx, **kwargs)
     elif ctx.obj["command"] == "list":
         list_migrations(ctx, **kwargs)
+    elif ctx.obj["command"] == "scync":
+        scync_miration(ctx)
+    elif ctx.obj["command"] == "update":
+        update_migration(ctx, **kwargs)
     else:
-        click.echo(f"Unknown command:")
+        click.echo("Unknown command:")
 
 
 @click.pass_context

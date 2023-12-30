@@ -1,7 +1,16 @@
 # Simple Migrator
 
 A simple tool written in python to run simple migrations.
+
 # Basic Usage
+
+### 0. Installation
+```bash
+pip install simple_migrator
+```
+
+#### i. MySQL setup
+
 
 ### 1. Setup
 ```bash

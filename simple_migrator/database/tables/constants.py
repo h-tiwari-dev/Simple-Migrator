@@ -1,1 +1,1 @@
-MIGRATIONS_TABLE_NAME: str = "migrations_table"
+MIGRATIONS_TABLE_NAME: str = "__migrations_table__"
