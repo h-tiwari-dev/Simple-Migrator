@@ -10,9 +10,10 @@ from prettytable import PrettyTable
 from simple_migrator.utils.migration_tools import MigrationTool
 
 
-def setup_migrator(ctx, database_env_name):
-    migration_tool = MigrationTool.setup(database_env_name)
+def setup_migrator(ctx, database_env_name: Optional[str]):
+    migration_tool: MigrationTool = MigrationTool.setup(database_env_name)
     migration_tool.database.setup_table()
+    return migration_tool
 
 
 def create_migration(ctx, migration_name: str, description: Optional[str]):

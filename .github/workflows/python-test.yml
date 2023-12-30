@@ -1,0 +1,50 @@
+name: Python Tests
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_DATABASE: testdb
+          MYSQL_ROOT_PASSWORD: alph123 
+        ports:
+          - "3306:3306"
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        # This will create a network link between the service container and the job container
+        # It allows the job container to communicate with the MySQL service container
+        container_name: mysql-container
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Ubuntu dependencies
+        run: |
+          sudo apt-get update &&
+          sudo apt-get install libcurl4-openssl-dev libmysqlclient-dev 
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.10
+
+      - name: Install Poetry
+        run: |
+          pip3 install poetry
+          && poetry config virtualenvs.create false
+          && poetry install --no-dev
+
+      - name: Install Dependencies
+        run: poetry install
+
+      - name: Run tests
+        # These environment variables will take precedence over the ones in the Django settings file
+        env:
+          # Set the DJANGO_SECRET_KEY in the Github repo settings: Go to Secrets and variables > Actions > New repository secret 
+          DATABASE_URL: "mysql://root:Julia%401984@localhost:3306/test_db"
+        run: cd test && poetry run python -m unittest 

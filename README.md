@@ -8,6 +8,10 @@ A simple tool written in python to run simple migrations.
 ```bash
 pip install simple_migrator
 ```
+> On Macos Install
+```bash
+brew install --cask mysql-connector-python
+```
 
 #### i. MySQL setup
 
