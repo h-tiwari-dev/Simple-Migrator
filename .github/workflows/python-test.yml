@@ -10,14 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      mysql:
-        image: mysql:latest
-        env:
-         MYSQL_DATABASE: testdb
-         MYSQL_ROOT_PASSWORD: alph123 
-        ports:
-         - "3306:3306"
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+      - uses: mirromutth/mysql-action@v1.1
+        with:
+          mysql database: 'test_db' # Optional, default value is "test". The specified database which will be create
+          mysql user: 'root' # Required if "mysql root password" is empty, default is empty. The superuser for the specified database. Can use secrets, too
+          mysql password: 'alpha123' # Required if "mysql user" exists. The password for the "mysql user"
 
     steps:
       - uses: actions/checkout@v3
