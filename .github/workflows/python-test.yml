@@ -8,14 +8,18 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-      #    services:
-      # mysql:
-      # image: mysql:5.7
-      #  ports:
-      #   - 3306:3306
-      #  env:
-      #    MYSQL_ROOT_PASSWORD: alpha123 
-      #  options: --health-cmd "mysqladmin ping -h localhost" --health-interval 20s --health-timeout 10s --health-retries 10
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: root 
+          POSTGRES_PASSWORD: root 
+          POSTGRES_DB: test_db 
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
     steps:
       - uses: actions/checkout@v3
       - name: Install Ubuntu dependencies
@@ -49,10 +53,19 @@ jobs:
       - name: Install Dependencies
         run: poetry install
 
-      - name: Run tests
+      - name: Run mysql tests
         # These environment variables will take precedence over the ones in the Django settings file
         env:
           # Set the DJANGO_SECRET_KEY in the Github repo settings: Go to Secrets and variables > Actions > New repository secret 
           DATABASE_URL: "mysql://root:root@127.0.0.1:3306/test_db"
-        run: cd test && poetry run python -m unittest 
+        run: poetry run python -m unittest discover -s test/mysql_tests -t .
+                                                                                      
+      - name: Run postgres tests
+        # These environment variables will take precedence over the ones in the Django settings file
+        env:
+          # Set the DJANGO_SECRET_KEY in the Github repo settings: Go to Secrets and variables > Actions > New repository secret 
+          DATABASE_URL: "postgresql://root:root@localhost:5432/test_db"
+        run: poetry run python -m unittest discover -s test/postgres_tests -t .
+
+
 
