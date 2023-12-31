@@ -8,18 +8,30 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:5.7
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        options: --health-cmd "mysqladmin ping -h localhost" --health-interval 20s --health-timeout 10s --health-retries 10
+
     steps:
       - uses: actions/checkout@v3
       - name: Install Ubuntu dependencies
         run: |
           sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libmysqlclient-dev && sudo apt-get install -y  mysql-client 
-      - name: mysql
-        uses: mirromutth/mysql-action@v1.1
-        with:
-          mysql database: 'test_db' # Optional, default value is "test". The specified database which will be create
-          mysql user: 'root' # Required if "mysql root password" is empty, default is empty. The superuser for the specified database. Can use secrets, too
-          mysql password: 'alpha123' # Required if "mysql user" exists. The password for the "mysql user"
-          character set server: 'utf8' # Optional, default value is 'utf8mb4'. The '--character-set-server' option for mysqld
+          # - name: mysql
+          # uses: mirromutth/mysql-action@v1.1
+          # with:
+          # mysql database: 'test_db' # Optional, default value is "test". The specified database which will be create
+          # mysql user: 'root' # Required if "mysql root password" is empty, default is empty. The superuser for the specified database. Can use secrets, too
+          # mysql password: 'alpha123' # Required if "mysql user" exists. The password for the "mysql user"
+          # character set server: 'utf8' # Optional, default value is 'utf8mb4'. The '--character-set-server' option for mysqld
+      - name: show charset
+        run: |
+          mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "show variables like 'chara%'"
 
       - name: Setup Python
         uses: actions/setup-python@v3
