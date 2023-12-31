@@ -22,17 +22,20 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install libcurl4-openssl-dev libmysqlclient-dev && sudo apt-get install -y  mysql-client 
 
-      - uses: samin/mysql-action@v1
+      - name: Setup mysql-action
+        uses: mirromutth/mysql-action@v1.1
         with:
           host port: 3306 # Optional, default value is 3306. The port of host
           container port: 3306 # Optional, default value is 3306. The port of container
           character set server: 'utf8' # Optional, default value is 'utf8mb4'. The '--character-set-server' option for mysqld
           collation server: 'utf8_general_ci' # Optional, default value is 'utf8mb4_general_ci'. The '--collation-server' option for mysqld
-          mysql version: '8.0' # Optional, default value is "latest". The version of the MySQL
+          mysql version: '5.7' # Optional, default value is "latest". The version of the MySQL
           mysql database: 'test_db' # Optional, default value is "test". The specified database which will be create
-          mysql root password: 'alpha123' # Required if "mysql user" is empty, default is empty. The root superuser password
-            # mysql user: 'developer' # Required if "mysql root password" is empty, default is empty. The superuser for the specified database. Of course you can use secrets, too
-            # mysql password: ${{ secrets.DatabasePassword }} # Required if "mysql user" exists. The password for the "mysql user"
+          mysql root password: 'root' # Required if "mysql user" is empty, default is empty. The root superuser password
+      - name: show charset
+        run: |
+          sleep 30
+          mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "show variables like 'chara%'"
 
       - name: show charset
         run: |
@@ -54,6 +57,6 @@ jobs:
         # These environment variables will take precedence over the ones in the Django settings file
         env:
           # Set the DJANGO_SECRET_KEY in the Github repo settings: Go to Secrets and variables > Actions > New repository secret 
-          DATABASE_URL: "mysql://root:alpha123@127.0.0.1:3306/test_db"
+          DATABASE_URL: "mysql://root:root@127.0.0.1:3306/test_db"
         run: cd test && poetry run python -m unittest 
 
