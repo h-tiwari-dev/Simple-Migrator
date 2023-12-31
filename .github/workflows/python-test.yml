@@ -8,21 +8,18 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
-    services:
-      mysql:
-        - uses: mirromutth/mysql-action@v1.1
-          with:
-            mysql database: 'test_db' # Optional, default value is "test". The specified database which will be create
-            mysql user: 'root' # Required if "mysql root password" is empty, default is empty. The superuser for the specified database. Can use secrets, too
-            mysql password: 'alpha123' # Required if "mysql user" exists. The password for the "mysql user"
-
     steps:
       - uses: actions/checkout@v3
       - name: Install Ubuntu dependencies
         run: |
           sudo apt-get update &&
           sudo apt-get install libcurl4-openssl-dev libmysqlclient-dev 
+      - name: mysql
+        - uses: mirromutth/mysql-action@v1.1
+          with:
+            mysql database: 'test_db' # Optional, default value is "test". The specified database which will be create
+            mysql user: 'root' # Required if "mysql root password" is empty, default is empty. The superuser for the specified database. Can use secrets, too
+            mysql password: 'alpha123' # Required if "mysql user" exists. The password for the "mysql user"
       - name: Setup Python
         uses: actions/setup-python@v3
         with:
