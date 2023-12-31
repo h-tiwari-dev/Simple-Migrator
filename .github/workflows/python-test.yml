@@ -31,7 +31,7 @@ jobs:
           # character set server: 'utf8' # Optional, default value is 'utf8mb4'. The '--character-set-server' option for mysqld
       - name: show charset
         run: |
-          mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "show variables like 'chara%'"
+          mysql -h 127.0.0.1 --port 3306 -uroot -palpha123 -e "show variables like 'chara%'"
 
       - name: Setup Python
         uses: actions/setup-python@v3
