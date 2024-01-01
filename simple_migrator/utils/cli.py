@@ -23,6 +23,7 @@ def create_migration(ctx, migration_name: str, description: Optional[str]):
     )
     migration_tool.save_migration(file_name, description)
     print(f"Migration {fg('green')}{file_path}{attr('reset')} created at {fg('green')}{file_path}{attr('reset')}")
+    return file_name, file_path
 
 def scync_miration(ctx):
     migration_tool = MigrationTool(DatabaseConfig.create_from_config_file())
