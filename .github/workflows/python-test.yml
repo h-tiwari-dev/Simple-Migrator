@@ -38,7 +38,6 @@ jobs:
           mysql root password: 'root' # Required if "mysql user" is empty, default is empty. The root superuser password
       - name: show charset
         run: |
-          sleep 30
           mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "show variables like 'chara%'"
 
       - name: Setup Python
