@@ -19,7 +19,7 @@ class TestingMigrationCreate(unittest.TestCase):
         with self.migration_tool.database.Session() as session:
             query_result = (
                 session.query(MigrationsTable.name)
-                .filter_by(name=MigrationsTable.name.in_([file_name]))
+                .filter(MigrationsTable.name.in_([file_name]))
                 .all()
             )
             database_file_names = [value for (value,) in query_result]

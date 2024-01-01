@@ -4,7 +4,7 @@ from simple_migrator.database.tables.constants import MIGRATIONS_TABLE_NAME
 from simple_migrator.database.tables.migrations_table import MigrationsTable
 from simple_migrator.utils.cli import create_migration 
 from simple_migrator.utils.constants import *
-from test.mysql_tests.test_migration_setup import TestingMigrationSetup
+from test.postgres_tests.test_migration_setup import TestingMigrationSetup
 
 
 class TestingMigrationCreate(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestingMigrationCreate(unittest.TestCase):
         with self.migration_tool.database.Session() as session:
             query_result = (
                 session.query(MigrationsTable.name)
-                .filter_by(name=MigrationsTable.name.in_([file_name]))
+                .filter(MigrationsTable.name.in_([file_name]))
                 .all()
             )
             database_file_names = [value for (value,) in query_result]
