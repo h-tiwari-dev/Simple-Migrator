@@ -156,5 +156,5 @@ Scyncing completed
 * [x] Add tests to ensure that it works.
 * [x] Add tests with other databases to ensure that it works.
 * [x] Add a decorator so that we can check if setup is correctly done and exists gracefully.
-* [ ] Make sql errors more visible.
+* [x] Make sql errors more visible. (Could be better)
 * [ ] Exist gracefully when database name is suppied properly.
