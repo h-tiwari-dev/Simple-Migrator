@@ -1,6 +1,9 @@
 import os
 import shutil
 import unittest
+
+from sqlalchemy import MetaData
+from simple_migrator.database.tables.constants import MIGRATIONS_TABLE_NAME
 from simple_migrator.utils.cli import setup_migrator
 from simple_migrator.utils.constants import *
 
@@ -20,7 +23,7 @@ class TestingMigrationSetup(unittest.TestCase):
             return setup_migrator(None, database_env_name=database_env_name)
 
     def test_setup_default_db_name(self):
-        migration_tool = self.setup_test_migrations(database_env_name=None)
+        migration_tool = self.setup_test_migrations()
         self.assertTrue(os.path.exists(
                 os.path.join(
                     MIGRATIONS_FOLDER_NAME, MIGRATIONS_CONFIG_FILE_NAME)
@@ -30,6 +33,8 @@ class TestingMigrationSetup(unittest.TestCase):
         # Cleanup
         if os.path.exists(MIGRATIONS_FOLDER_NAME):
             shutil.rmtree(MIGRATIONS_FOLDER_NAME)
+        migration_tool.execute(f"DROP TABLE {MIGRATIONS_TABLE_NAME}")
+
 
     def test_setup_custom_db_name(self):
         db_env_name = "DB_ENV_NAME"
@@ -44,6 +49,7 @@ class TestingMigrationSetup(unittest.TestCase):
         # Cleanup
         if os.path.exists(MIGRATIONS_FOLDER_NAME):
             shutil.rmtree(MIGRATIONS_FOLDER_NAME)
+        migration_tool.execute(f"DROP TABLE {MIGRATIONS_TABLE_NAME}")
 
 if __name__ == '__main__':
     unittest.main()

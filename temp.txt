@@ -1,0 +1,6 @@
+File_path migrations/.config
+Checking if migration table exists
+File_path migrations/.config
+Checking if migration table exists
+File_path migrations/.config
+Checking if migration table exists

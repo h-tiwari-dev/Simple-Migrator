@@ -1,9 +1,10 @@
 import os
 import unittest
+from simple_migrator.database.tables.constants import MIGRATIONS_TABLE_NAME
 from simple_migrator.database.tables.migrations_table import MigrationsTable
 from simple_migrator.utils.cli import create_migration 
 from simple_migrator.utils.constants import *
-from test.postgres_tests.test_migration_setup import TestingMigrationSetup
+from test.mysql_tests.test_migration_setup import TestingMigrationSetup
 
 
 class TestingMigrationCreate(unittest.TestCase):
@@ -22,6 +23,18 @@ class TestingMigrationCreate(unittest.TestCase):
             )
             database_file_names = [value for (value,) in query_result]
             self.assertTrue(len(database_file_names) >= 1)
+
+        # Cleanup
+        all_files = os.listdir(MIGRATIONS_FOLDER_NAME)
+        for file_name in all_files:
+            file_path = os.path.join(MIGRATIONS_FOLDER_NAME, file_name)
+        
+            # Check if the file is not ".config" and is a file (not a directory)
+            if file_name != ".config" and os.path.isfile(file_path):
+                os.remove(file_path)
+                print(f"Deleted: {file_name}")
+
+        migration_tool.execute(f"DELETE FROM {MIGRATIONS_TABLE_NAME}")
 
 if __name__ == '__main__':
     unittest.main()
