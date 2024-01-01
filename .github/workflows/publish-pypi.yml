@@ -7,6 +7,18 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: root 
+          POSTGRES_PASSWORD: root 
+          POSTGRES_DB: test_db 
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
     steps:
       - uses: actions/checkout@v3
       - name: Install Ubuntu dependencies
@@ -23,10 +35,16 @@ jobs:
           mysql version: '5.7' # Optional, default value is "latest". The version of the MySQL
           mysql database: 'test_db' # Optional, default value is "test". The specified database which will be create
           mysql root password: 'root' # Required if "mysql user" is empty, default is empty. The root superuser password
+
       - name: show charset
         run: |
           sleep 30
           mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "show variables like 'chara%'"
+
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.110
 
       - name: Build and publish to pypi
         uses: JRubics/poetry-publish@v1.17
