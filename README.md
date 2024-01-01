@@ -110,6 +110,7 @@ This will list the last applied migrations.
 ```bash
 simple_migrator list last-applied 
 ```
+
 | Name                                   | Status                  | Applied At                   |
 | -------------------------------------- | ----------------------- | ---------------------------- |
 | 1704097461646876000_migration_1.sql    | MigrationStatus.APPLIED | 2024-01-01 14:00:21.011784   |
@@ -119,6 +120,7 @@ This will list the all the pending migrations.
 ```bash
 simple_migrator list pending 
 ```
+
 | Name                                   | Status                  | Applied At                   |
 | -------------------------------------- | ----------------------- | ---------------------------- |
 | 1704097419937590000_migration_0.sql    | MigrationStatus.PENDING | 2024-01-01 14:03:14.225402   |
