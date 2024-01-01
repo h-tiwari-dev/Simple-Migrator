@@ -1,11 +1,15 @@
 import functools
 from typing import Callable
 
+from simple_migrator.database.config import DatabaseConfig
+from simple_migrator.utils.migration_tools import MigrationTool
+
 
 def check_unsynced_migrations(func: Callable):
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
-        is_unsynced, unsynced_files, unsynced_db_entries = self.get_unsynced()
+        migration_tool = MigrationTool(DatabaseConfig.create_from_config_file())
+        is_unsynced, unsynced_files, unsynced_db_entries = migration_tool.get_unsynced()
 
         if is_unsynced:
             raise Exception(f"""Migration is unsynced from the database.
@@ -16,5 +20,5 @@ def check_unsynced_migrations(func: Callable):
                   """)
         else:
             # If everything is in sync, proceed with the original function
-            return func(self, *args, **kwargs)
+            return func(self, *args, **kwargs, migration_tool=migration_tool)
     return wrapper

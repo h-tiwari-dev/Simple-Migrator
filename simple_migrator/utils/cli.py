@@ -6,6 +6,7 @@ from colored import fg, attr
 from simple_migrator.database.config import DatabaseConfig
 from simple_migrator.database.tables.migrations_table import MigrationStatus
 from prettytable import PrettyTable
+from simple_migrator.utils.decorators import check_unsynced_migrations
 
 from simple_migrator.utils.migration_tools import MigrationTool
 
@@ -16,20 +17,28 @@ def setup_migrator(ctx, database_env_name: Optional[str]):
     return migration_tool
 
 
-def create_migration(ctx, migration_name: str, description: Optional[str]):
-    migration_tool = MigrationTool(DatabaseConfig.create_from_config_file())
+@check_unsynced_migrations
+def create_migration(ctx, migration_name: str, description: Optional[str], migration_tool: MigrationTool):
     file_name, file_path = migration_tool.create_migration_file(
         migration_name=migration_name
     )
     migration_tool.save_migration(file_name, description)
-    print(f"Migration {fg('green')}{file_path}{attr('reset')} created at {fg('green')}{file_path}{attr('reset')}")
+    print(f"Migration {fg('green')}{file_name}{attr('reset')} created at {fg('green')}{file_path}{attr('reset')}")
     return file_name, file_path
 
-def scync_miration(ctx):
+def scync_miration(ctx, status: Optional[str]):
     migration_tool = MigrationTool(DatabaseConfig.create_from_config_file())
-    migration_tool.sync_migrations()
+    if status is MigrationStatus.APPLIED:
+        status = MigrationStatus.APPLIED
+    elif status is MigrationStatus.FAILED:
+        status = MigrationStatus.FAILED
+    elif status is MigrationStatus.PENDING:
+        status = MigrationStatus.PENDING 
+    migration_tool.sync_migrations(migration_status=status)
 
-def update_migration(ctx, files: List[str], status: MigrationStatus):
+
+@check_unsynced_migrations
+def update_migration(ctx, files: List[str], status: MigrationStatus, migration_tool: MigrationTool):
     migration_tool = MigrationTool(DatabaseConfig.create_from_config_file())
     files = list(files)
 
@@ -43,10 +52,14 @@ def update_migration(ctx, files: List[str], status: MigrationStatus):
     )
     try:
         migration_tool.update_migrations(migration_names, status)
+        print(
+            f"""Migrations:{[mig for mig in migration_names]} updated to status {status}"""
+        )
     except Exception:
         print(f"Exceptions occured while updating migrtaions")
 
-def apply_migrations(ctx, files: Optional[List[str]]):
+@check_unsynced_migrations
+def apply_migrations(ctx, files: Optional[List[str]], migration_tool: MigrationTool):
     migration_tool = MigrationTool(DatabaseConfig.create_from_config_file())
     migration_files: List[str] = []
 
@@ -56,7 +69,7 @@ def apply_migrations(ctx, files: Optional[List[str]]):
     else:
         migration_files = [str(mig.name) for mig in migration_tool.get_migrations("pending")]
 
-    print(f"Going to run the following migrations:\n {fg('green')}{','.join(migration_files)}{attr('reset   ')}")
+    print(f"Going to run the following migrations:\n {fg('green')}{','.join(migration_files)}{attr('reset')}")
     up_migrations = list(
         filter(
             lambda x: len(x[1]) != 0,
@@ -64,31 +77,39 @@ def apply_migrations(ctx, files: Optional[List[str]]):
         )
     )
     valid_migrations_name = list(map(lambda x: x[0], up_migrations))
-    migration_tool.group_migrations(valid_migrations_name)
 
+    if len(valid_migrations_name) != len(migration_files):
+        print(
+            f"The following migrations are not valid: {fg('red')}",
+            list(filter(lambda x: x not in valid_migrations_name, migration_files)), 
+            f"{attr('reset')}"
+        )
+        if len(valid_migrations_name) == 0:
+            return
+
+    migration_tool.group_migrations(valid_migrations_name)
+    runned_migrations = []
+    errored_migrations = []
+    
     for migration in up_migrations:
         result = migration_tool.database.execute_transactions(migration[1])
         if result:
             print(f"{fg('blue')}Migraiton {migration[0]}: {attr('reset')}{fg('green')}COMPLETED{attr('reset')}")
             migration_tool.update_migration(migration[0], MigrationStatus.APPLIED)
+            runned_migrations.append(migration[0])
         else:
             print(f"Migraiton {migration[0]}: {fg('red')}FAILED{attr('reset')}")
             migration_tool.update_migration(migration[0], MigrationStatus.FAILED)
+            errored_migrations.append(migration[0])
 
-    if len(up_migrations) != len(migration_files):
-        print(
-            "These migrations could not be runned.", fg('red'),
-            '\n'.join(list(filter(lambda x: x in migration_files, valid_migrations_name))),
-            attr('reset')
-        )
-
-        print(
-        )
-    else:
-        print("All Up migration runned successfully.")
+    if len(errored_migrations) != 0:
+        print(f"The following migration errored: {fg('red')}{errored_migrations}{attr('reset')}")
+    if len(runned_migrations) != 0:
+        print(f"The following migration runned Successfully: {fg('green')}{runned_migrations}{attr('reset')}")
 
 
-def rollback_migrations(ctx, files: Optional[List[str]]):
+@check_unsynced_migrations
+def rollback_migrations(ctx, files: Optional[List[str]], migration_tool: MigrationTool):
     migration_tool = MigrationTool(DatabaseConfig.create_from_config_file())
     last_runned_migrations = []
 
@@ -154,7 +175,7 @@ def handle_cli_commands(ctx, **kwargs):
     elif ctx.obj["command"] == "list":
         list_migrations(ctx, **kwargs)
     elif ctx.obj["command"] == "scync":
-        scync_miration(ctx)
+        scync_miration(ctx, **kwargs)
     elif ctx.obj["command"] == "update":
         update_migration(ctx, **kwargs)
     else:

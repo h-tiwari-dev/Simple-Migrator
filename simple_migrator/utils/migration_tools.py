@@ -13,8 +13,6 @@ from simple_migrator.database.tables.migrations_table import (
     MigrationsTable,
 )
 
-from simple_migrator.utils.decorators import check_unsynced_migrations
-
 from .constants import (
     CREATE_DOWN_START_MIGRATIONS,
     CREATE_UP_START_MIGRATIONS,
@@ -54,29 +52,32 @@ class MigrationTool:
         unsynced_files = []
         unsynced_db_entries = {}
         is_unscynced = False
+
         # Add new migrations to the database
         for file in files:
-            migration_name = os.path.splitext(file)[0]
-            if migration_name not in [m.name for m in db_migrations]:
+            migration_name = file
+            if migration_name not in [str(m.name) for m in db_migrations]:
+                print(migration_name, [str(m.name) for m in db_migrations])
                 is_unscynced = True
                 unsynced_files.append(migration_name)
 
         # Remove database migrations that don't have corresponding files
         for migration in db_migrations:
-            if migration.name not in [os.path.splitext(f)[0] for f in files]:
+            if migration.name not in [f for f in files]:
+                print(migration.name)
                 is_unscynced = True
                 unsynced_db_entries[str(migration.name)] = migration
 
         return (is_unscynced, unsynced_files, unsynced_db_entries)
 
-    def sync_migrations(self):
+    def sync_migrations(self, migration_status: MigrationStatus = MigrationStatus.APPLIED):
         is_unscynced, unsynced_files, unsynced_db_entries = self.get_unsynced()
         if not is_unscynced:
             print("Database is scynced")
 
         # Add new migrations to the database
         for file in unsynced_files:
-            self.save_migration(file, None)
+            self.save_migration(file, description="" ,migration_status=migration_status)
 
         # Remove database migrations that don't have corresponding files
         for key, _ in unsynced_db_entries.items():
@@ -88,7 +89,6 @@ class MigrationTool:
     def create_migration_name(file_name: str) -> str:
         return f"{time.time_ns()}_{file_name}.sql"
 
-    @check_unsynced_migrations
     def create_migration_file(self, migration_name: str) -> Tuple[str, str]:
         file_name = MigrationTool.create_migration_name(migration_name)
         file_path = os.path.join(MIGRATIONS_FOLDER_NAME, file_name)
@@ -127,12 +127,18 @@ class MigrationTool:
             try:
                 migrations = session.query(MigrationsTable).filter(MigrationsTable.name.in_(file_names)).all()
                 for migration in migrations:
-                    migration.status = migration_status
+                    if migration_status is MigrationStatus.APPLIED:
+                        migration.status = MigrationStatus.APPLIED
+                    elif migration_status is MigrationStatus.FAILED:
+                        migration.status = MigrationStatus.FAILED
+                    elif migration_status is MigrationStatus.PENDING:
+                        migration.status = MigrationStatus.PENDING 
+                        
                     migration.applied_at = datetime.now()
                 session.commit()
                 session.close()
-            except Exception:
-                print("ERR")
+            except Exception as e:
+                print(f"Error: {e}")
 
     def update_migration(self, file_name: str, migration_status: MigrationStatus):
         with self.database.Session() as session:
@@ -154,11 +160,11 @@ class MigrationTool:
         with self.database.Session() as session:
             query_result = (
                 session.query(MigrationsTable.name)
-                .filter_by(name=MigrationsTable.name.not_in(file_names))
+                .filter(MigrationsTable.name.in_(file_names))
                 .all()
             )
             database_file_names = [value for (value,) in query_result]
-            if len(database_file_names) != 0:
+            if len(database_file_names) == 0:
                 print(
                     f"Could not find the following migrations in the database {database_file_names}. CREATING THEM."
                 )

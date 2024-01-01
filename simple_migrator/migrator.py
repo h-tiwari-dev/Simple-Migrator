@@ -40,11 +40,15 @@ def create(ctx, migration_name: str, description: str):
     handle_cli_commands(ctx, migration_name=migration_name, description=description)
 
 @cli.command()
+@click.option(
+    "--status",
+    type=click.Choice([status.value for status in MigrationStatus]),
+)
 @click.pass_context
-def scync(ctx):
+def scync(ctx, status: str):
     """Scync migrations."""
     setup_cli("scync")
-    handle_cli_commands(ctx)
+    handle_cli_commands(ctx, status=status)
 
 
 @cli.command()
@@ -86,7 +90,7 @@ def up(ctx, files: Union[str, List[str]]):
 @cli.command()
 @click.option(
     "--files",
-    type=List[str],
+    # type=List[str],
     help="List of files you want to rollback. This won't check the last runned migrations.",
 )
 @click.pass_context
