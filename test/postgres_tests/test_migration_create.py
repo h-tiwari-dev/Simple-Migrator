@@ -34,7 +34,7 @@ class TestingMigrationCreate(unittest.TestCase):
                 os.remove(file_path)
                 print(f"Deleted: {file_name}")
 
-        migration_tool.execute(f"DELETE FROM {MIGRATIONS_TABLE_NAME}")
+        self.migration_tool.database.execute_transactions([f"DELETE FROM {MIGRATIONS_TABLE_NAME}"])
 
 if __name__ == '__main__':
     unittest.main()

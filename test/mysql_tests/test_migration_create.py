@@ -4,11 +4,12 @@ from simple_migrator.database.tables.constants import MIGRATIONS_TABLE_NAME
 from simple_migrator.database.tables.migrations_table import MigrationsTable
 from simple_migrator.utils.cli import create_migration 
 from simple_migrator.utils.constants import *
+from simple_migrator.utils.migration_tools import MigrationTool
 from test.mysql_tests.test_migration_setup import TestingMigrationSetup
 
 
 class TestingMigrationCreate(unittest.TestCase):
-    migration_tool = TestingMigrationSetup.setup_test_migrations()
+    migration_tool: MigrationTool = TestingMigrationSetup.setup_test_migrations()
 
     def test_create_migration(self):
         file_name, file_path = create_migration(
@@ -33,7 +34,7 @@ class TestingMigrationCreate(unittest.TestCase):
                 os.remove(file_path)
                 print(f"Deleted: {file_name}")
 
-        migration_tool.execute(f"DELETE FROM {MIGRATIONS_TABLE_NAME}")
+        self.migration_tool.database.execute_transactions([f"DELETE FROM {MIGRATIONS_TABLE_NAME}"])
 
 
 if __name__ == '__main__':

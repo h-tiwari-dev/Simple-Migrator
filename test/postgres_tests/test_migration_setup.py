@@ -33,7 +33,7 @@ class TestingMigrationSetup(unittest.TestCase):
         # Cleanup
         if os.path.exists(MIGRATIONS_FOLDER_NAME):
             shutil.rmtree(MIGRATIONS_FOLDER_NAME)
-        migration_tool.execute(f"DROP TABLE {MIGRATIONS_TABLE_NAME}")
+        migration_tool.database.execute_transactions([f"DROP TABLE {MIGRATIONS_TABLE_NAME}"])
 
 
     def test_setup_custom_db_name(self):
@@ -49,7 +49,7 @@ class TestingMigrationSetup(unittest.TestCase):
         # Cleanup
         if os.path.exists(MIGRATIONS_FOLDER_NAME):
             shutil.rmtree(MIGRATIONS_FOLDER_NAME)
-        migration_tool.execute(f"DROP TABLE {MIGRATIONS_TABLE_NAME}")
+        migration_tool.database.execute_transactions([f"DROP TABLE {MIGRATIONS_TABLE_NAME}"])
 
 if __name__ == '__main__':
     unittest.main()
