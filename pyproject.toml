@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "simple_migrator"
-version = "0.1.8"
+version = "0.1.9"
 description = "A simple migrator with no bs."
 authors = ["Harsh Tiwari"]
 license = "MIT"

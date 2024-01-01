@@ -146,6 +146,7 @@ Scyncing completed
 # Visit:
 1. [Github](https://github.com/h-tiwari-dev/Simple-Migrator)
 2. [PyPi](https://pypi.org/project/simple_migrator/)
+3. [Website](https://h-tiwari-dev.github.io/Simple-Migrator/)
 
 
 # TDOD:
