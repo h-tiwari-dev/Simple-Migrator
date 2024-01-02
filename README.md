@@ -127,6 +127,9 @@ simple_migrator list pending
 
 ### 5. Update 
 This command is used when you want to update the migration status of certain migrations. You can set different migrations status with --files file_name_1 --files file_name_2 and --status can be set to pending|applied|failed
+```bash
+simple_migrator update -f 1704097461646876000_migration_1.sql  --status pending
+```
 > Result:-
 ```bash
 Going to update the following migrations:['1704097461646876000_migration_1.sql'] to status pending
